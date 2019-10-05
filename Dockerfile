@@ -5,8 +5,8 @@
 ARG FROM_IMAGE=mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019
 FROM ${FROM_IMAGE}
 
-# Restore the default Windows shell for correct batch processing.
-#SHELL ["cmd", "/S", "/C"]
+# We're using PowerShell as the default shell
+SHELL ["powershell", "-Command"]
 
 # Copy our Install script.
 #COPY Install.cmd C:/TEMP/
@@ -21,12 +21,19 @@ ADD ${CHANNEL_URL} C:/TEMP/VisualStudio.chman
 # Download and install Build Tools excluding workloads and components with known issues.
 ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 # Prefix with C:\TEMP\Install.cmd to enable log gathering
-RUN C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
-    --installPath C:\BuildTools `
-    --channelUri C:\TEMP\VisualStudio.chman `
-    --installChannelUri C:\TEMP\VisualStudio.chman `
-    --add 'Microsoft.VisualStudio.Workload.MSBuildTools;includeRecommended' `
-    --add 'Microsoft.VisualStudio.Workload.VCTools;includeRecommended'
+# Note that --wait option to installer doesn't actually wait, so you want to tell powershell
+# to explicitly wait for install to complete
+RUN Start-Process C:\TEMP\vs_buildtools.exe -Wait -ArgumentList `
+    --quiet, `
+    --wait, `
+    --norestart, `
+    --nocache, `
+    --installPath,C:\BuildTools, `
+    --channelUri,C:\TEMP\VisualStudio.chman, `
+    --installChannelUri,C:\TEMP\VisualStudio.chman, `
+    --add,Microsoft.VisualStudio.Workload.MSBuildTools, `
+    --add,Microsoft.VisualStudio.Workload.VCTools, `
+    --includeRecommended
 
 # Install CMake
 ADD https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-win64-x64.msi C:\TEMP\cmake.msi
@@ -37,11 +44,14 @@ RUN Start-Process msiexec.exe -Wait -ArgumentList '/I C:\TEMP\cmake.msi /quiet' 
 # Install git
 ADD https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/Git-2.23.0-64-bit.exe C:\TEMP\git.exe
 RUN Start-Process C:\TEMP\git.exe -Wait -ArgumentList `
-    '/VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"' `
+    '/VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"' ;`
     Remove-Item -Path 'C:\TEMP\git.exe'
 
-# Start developer command prompt with any other commands specified.
-#ENTRYPOINT C:/BuildTools/Common7/Tools/VsDevCmd.bat &&
+# Start developer command prompt with any other commands specified. Unfortunately no PowerShell version of vsdevcmd.bat
+# so we extract the environment variables it created / changed and stick those into PowerShell env:
+ENTRYPOINT & \"${env:COMSPEC}\" /s /c \"C:\BuildTools\Common7\Tools\VsDevCmd.bat -no_logo && set\" | `
+           foreach-object { $name, $value = $_ -split '=', 2 ; set-content env:\"$name\" $value } ;
 
 # Default to PowerShell if no other command specified.
-CMD ["powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
+CMD powershell.exe -NoLogo -ExecutionPolicy Bypass
+
