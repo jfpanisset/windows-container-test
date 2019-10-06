@@ -26,6 +26,7 @@ jobs:
       DOCKER_HUB_USERNAME: $(DOCKER_HUB_USERNAME)
       DOCKER_HUB_PASSWORD: $(DOCKER_HUB_PASSWORD)
   - script: |
+      docker tag buildtools2019:latest $(DOCKER_HUB_USERNAME)/buildtools2019:latest
       docker push $(DOCKER_HUB_USERNAME)/buildtools2019
     displayName: Docker Push
     env:
