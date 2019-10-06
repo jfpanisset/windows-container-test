@@ -17,8 +17,6 @@ jobs:
 
   steps:
   - script: |
-      echo "$DOCKER_PASSWORD" | docker login -u $(dockerhub.username) --password-stdin
-  - script: |
       docker build -t buildtools2019:latest -m 2GB --build-arg FROM_IMAGE=mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-1803 .
     displayName: Docker Build
   - script: |
