@@ -17,7 +17,7 @@ jobs:
 
   steps:
   - script: |
-      docker build -t buildtools2019:latest -m 2GB --build-arg FROM_IMAGE=mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-1803 .
+      docker build -t buildtools2019:latest -m 2GB --build-arg FROM_IMAGE=mcr.microsoft.com/windows/servercore:1803 .
     displayName: Docker Build
   - script: |
       docker login -u $(DOCKER_HUB_USERNAME) -p $(DOCKER_HUB_PASSWORD)
