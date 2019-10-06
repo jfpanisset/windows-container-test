@@ -1,8 +1,12 @@
 # escape=`
 
-# Use a specific tagged image. Tags can be changed, though that is unlikely for most images.
-# You could also use the immutable tag @sha256:324e9ab7262331ebb16a4100d0fb1cfb804395a766e3bb1806c62989d1fc1326
-ARG FROM_IMAGE=mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019
+# On Windows the container has to be based on the same Windows version ("Build") as the host that runs it.
+# Microsoft hosted Azure Pipelines build agents currently only support running containers on Windows Server
+# Core 1803. Also Build Tools 2019 require the .net 4.8 framework: if not present the installer will try
+# to install it, leaving the container in "needs a reboot" state. Thus we cannot use the generic
+# mcr.microsoft.com/windows/servercore:1803 Server Core image (which is pre-cached on these build
+# agents), we need one where .net 4.8 has already been installed. 
+ARG FROM_IMAGE=mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-1803
 FROM ${FROM_IMAGE}
 
 # We're using PowerShell as the default shell
@@ -49,9 +53,9 @@ RUN Start-Process C:\TEMP\git.exe -Wait -ArgumentList `
 
 # Start developer command prompt with any other commands specified. Unfortunately no PowerShell version of vsdevcmd.bat
 # so we extract the environment variables it created / changed and stick those into PowerShell env:
-ENTRYPOINT & \"${env:COMSPEC}\" /s /c \"C:\BuildTools\Common7\Tools\VsDevCmd.bat -no_logo && set\" | `
-           foreach-object { $name, $value = $_ -split '=', 2 ; set-content env:\"$name\" $value } ;
+#ENTRYPOINT & \"${env:COMSPEC}\" /s /c \"C:\BuildTools\Common7\Tools\VsDevCmd.bat -no_logo && set\" | `
+#           foreach-object { $name, $value = $_ -split '=', 2 ; set-content env:\"$name\" $value } ;
 
 # Default to PowerShell if no other command specified.
-CMD powershell.exe -NoLogo -ExecutionPolicy Bypass
+#CMD powershell.exe -NoLogo -ExecutionPolicy Bypass
 
