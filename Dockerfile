@@ -2,10 +2,13 @@
 
 # On Windows the container has to be based on the same Windows version ("Build") as the host that runs it.
 # Microsoft hosted Azure Pipelines build agents currently only support running containers on Windows Server
-# Core 1803. Also Build Tools 2019 require the .net 4.8 framework: if not present the installer will try
+# Core 1803.
+# Also Build Tools 2019 require the .net 4.8 framework: if not present the installer will try
 # to install it, leaving the container in "needs a reboot" state. Thus we cannot use the generic
 # mcr.microsoft.com/windows/servercore:1803 Server Core image (which is pre-cached on these build
-# agents), we need one where .net 4.8 has already been installed. 
+# agents), we need one where .net 4.8 has already been installed.
+# This may or may not be true, it seems the building on top of just the Server Core 1803 base image
+# may be sufficient. 
 #ARG FROM_IMAGE=mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-1803
 ARG FROM_IMAGE=mcr.microsoft.com/windows/servercore:1803
 FROM ${FROM_IMAGE}
@@ -28,17 +31,17 @@ ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 # Prefix with C:\TEMP\Install.cmd to enable log gathering
 # Note that --wait option to installer doesn't actually wait, so you want to tell powershell
 # to explicitly wait for install to complete
-#RUN Start-Process C:\TEMP\vs_buildtools.exe -Wait -ArgumentList `
-#    --quiet, `
-#    --wait, `
-#    --norestart, `
-#    --nocache, `
-#    --installPath,C:\BuildTools, `
-#    --channelUri,C:\TEMP\VisualStudio.chman, `
-#    --installChannelUri,C:\TEMP\VisualStudio.chman, `
-#    --add,Microsoft.VisualStudio.Workload.MSBuildTools, `
-#    --add,Microsoft.VisualStudio.Workload.VCTools, `
-#    --includeRecommended
+RUN Start-Process C:\TEMP\vs_buildtools.exe -Wait -ArgumentList `
+    --quiet, `
+    --wait, `
+    --norestart, `
+    --nocache, `
+    --installPath,C:\BuildTools, `
+    --channelUri,C:\TEMP\VisualStudio.chman, `
+    --installChannelUri,C:\TEMP\VisualStudio.chman, `
+    --add,Microsoft.VisualStudio.Workload.MSBuildTools, `
+    --add,Microsoft.VisualStudio.Workload.VCTools, `
+    --includeRecommended
 
 # Install CMake
 ADD https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-win64-x64.msi C:\TEMP\cmake.msi
