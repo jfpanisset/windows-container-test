@@ -6,7 +6,8 @@
 # to install it, leaving the container in "needs a reboot" state. Thus we cannot use the generic
 # mcr.microsoft.com/windows/servercore:1803 Server Core image (which is pre-cached on these build
 # agents), we need one where .net 4.8 has already been installed. 
-ARG FROM_IMAGE=mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-1803
+#ARG FROM_IMAGE=mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-1803
+ARG FROM_IMAGE=mcr.microsoft.com/windows/servercore:1803
 FROM ${FROM_IMAGE}
 
 # We're using PowerShell as the default shell
@@ -27,17 +28,17 @@ ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 # Prefix with C:\TEMP\Install.cmd to enable log gathering
 # Note that --wait option to installer doesn't actually wait, so you want to tell powershell
 # to explicitly wait for install to complete
-RUN Start-Process C:\TEMP\vs_buildtools.exe -Wait -ArgumentList `
-    --quiet, `
-    --wait, `
-    --norestart, `
-    --nocache, `
-    --installPath,C:\BuildTools, `
-    --channelUri,C:\TEMP\VisualStudio.chman, `
-    --installChannelUri,C:\TEMP\VisualStudio.chman, `
-    --add,Microsoft.VisualStudio.Workload.MSBuildTools, `
-    --add,Microsoft.VisualStudio.Workload.VCTools, `
-    --includeRecommended
+#RUN Start-Process C:\TEMP\vs_buildtools.exe -Wait -ArgumentList `
+#    --quiet, `
+#    --wait, `
+#    --norestart, `
+#    --nocache, `
+#    --installPath,C:\BuildTools, `
+#    --channelUri,C:\TEMP\VisualStudio.chman, `
+#    --installChannelUri,C:\TEMP\VisualStudio.chman, `
+#    --add,Microsoft.VisualStudio.Workload.MSBuildTools, `
+#    --add,Microsoft.VisualStudio.Workload.VCTools, `
+#    --includeRecommended
 
 # Install CMake
 ADD https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-win64-x64.msi C:\TEMP\cmake.msi
@@ -53,6 +54,11 @@ RUN Start-Process C:\TEMP\git.exe -Wait -ArgumentList `
 
 # Start developer command prompt with any other commands specified. Unfortunately no PowerShell version of vsdevcmd.bat
 # so we extract the environment variables it created / changed and stick those into PowerShell env:
+# This is useful for a standalone development container, for Azure Pipelines will use "docker create" to start
+# a long running container with a "keep alive" Node.JS process and then "docker exec" to execute commands
+# inside the container, so there shouldn't be a ENTRYPOINT specified for these build container images.
+# Also CMake is able to find the Visual Studio compiler without having to run VsDevCmd.bat
+
 #ENTRYPOINT & \"${env:COMSPEC}\" /s /c \"C:\BuildTools\Common7\Tools\VsDevCmd.bat -no_logo && set\" | `
 #           foreach-object { $name, $value = $_ -split '=', 2 ; set-content env:\"$name\" $value } ;
 

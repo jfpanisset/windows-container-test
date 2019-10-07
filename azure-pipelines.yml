@@ -17,18 +17,15 @@ jobs:
 
   steps:
   - script: |
-      docker build -t buildtools2019:latest -m 2GB --build-arg FROM_IMAGE=mcr.microsoft.com/windows/servercore:1803 .
+      docker build -t buildtools2019:latest -m 2GB .
     displayName: Docker Build
   - script: |
-      docker login -u $(DOCKER_HUB_USERNAME) -p $(DOCKER_HUB_PASSWORD)
+      docker login -u panisset -p $(DOCKER_HUB_TOKEN)
     displayName: Docker Hub Login
     env:
-      DOCKER_HUB_USERNAME: $(DOCKER_HUB_USERNAME)
-      DOCKER_HUB_PASSWORD: $(DOCKER_HUB_PASSWORD)
+      DOCKER_HUB_TOKEN: $(DOCKER_HUB_TOKEN)
   - script: |
-      docker tag buildtools2019:latest $(DOCKER_HUB_USERNAME)/buildtools2019:latest
-      docker push $(DOCKER_HUB_USERNAME)/buildtools2019
+      docker tag buildtools2019:latest panisset/buildtools2019:latest
+      docker push panisset/buildtools2019
     displayName: Docker Push
-    env:
-      DOCKER_HUB_USERNAME: $(DOCKER_HUB_USERNAME)
 
