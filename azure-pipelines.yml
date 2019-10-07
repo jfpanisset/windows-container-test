@@ -29,11 +29,23 @@ jobs:
 #      docker push panisset/buildtools2019
 #    displayName: Docker Push
   - task: Docker@2
-    displayName: Build and Push
     inputs:
-      command: buildAndPush
-      containerRegistry: windows-container-test.dockerhub.connection
+      command: build
       repository: panisset/buildtools2019
       tags: latest
       arguments: -m 2GB
+    displayName: Docker Build
+  - task: Docker@2
+    inputs:
+      command: login
+      containerRegistry: windows-container-test.dockerhub.connection
+    displayName: Docker Hub Login
+  - task: Docker@2
+    inputs:
+      command: push
+      containerRegistry: windows-container-test.dockerhub.connection
+      repository: panisset/buildtools2019
+      tags: latest
+    displayName: Docker Push
+
 
