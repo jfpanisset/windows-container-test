@@ -16,16 +16,24 @@ jobs:
     vmImage: 'win1803'
 
   steps:
-  - script: |
-      docker build -t buildtools2019:latest -m 2GB .
-    displayName: Docker Build
-  - script: |
-      docker login -u panisset -p $(DOCKER_HUB_TOKEN)
-    displayName: Docker Hub Login
-    env:
-      DOCKER_HUB_TOKEN: $(DOCKER_HUB_TOKEN)
-  - script: |
-      docker tag buildtools2019:latest panisset/buildtools2019:latest
-      docker push panisset/buildtools2019
-    displayName: Docker Push
+#  - script: |
+#      docker build -t buildtools2019:latest -m 2GB .
+#    displayName: Docker Build
+#  - script: |
+#      docker login -u panisset -p $(DOCKER_HUB_TOKEN)
+#    displayName: Docker Hub Login
+#    env:
+#      DOCKER_HUB_TOKEN: $(DOCKER_HUB_TOKEN)
+#  - script: |
+#      docker tag buildtools2019:latest panisset/buildtools2019:latest
+#      docker push panisset/buildtools2019
+#    displayName: Docker Push
+  - task: Docker@2
+    displayName: Build and Push
+    inputs:
+      command: buildAndPush
+      containerRegistry: windows-container-test.dockerhub.connection
+      repository: panisset/buildtools2019
+      tags: latest
+      arguments: -m 2GB
 
