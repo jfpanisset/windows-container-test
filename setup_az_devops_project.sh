@@ -45,7 +45,7 @@ export GITHUB_USER=$3
 export AZURE_DEVOPS_EXT_GITHUB_PAT=$4
 export GITHUB_PROJECT=$5
 export DOCKER_HUB_USER=$6
-export DOCKER_HUB_TOKEN=$8
+export DOCKER_HUB_TOKEN=$7
 export DOCKER_HUB_EMAIL=$8
 
 # Create Azure DevOps project, set organization and project to be the default
