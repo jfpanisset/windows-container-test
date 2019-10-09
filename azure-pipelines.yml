@@ -1,10 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright Contributors to the ASWF Sample Project
 #
-# A simple multi-platform Azure Pipelines definition to build, run test suite
-# and upload results to test dashboard. Using 'matrix' would reduce duplication
-# but there's no such thing as macOS containers. Could move the steps to a separate
-# YAML file.
+# A simple Azure Pipelines YAML setup to build and upload a Windows based container
+#
 
 trigger:
 - master
@@ -16,18 +14,6 @@ jobs:
     vmImage: 'win1803'
 
   steps:
-#  - script: |
-#      docker build -t buildtools2019:latest -m 2GB .
-#    displayName: Docker Build
-#  - script: |
-#      docker login -u panisset -p $(DOCKER_HUB_TOKEN)
-#    displayName: Docker Hub Login
-#    env:
-#      DOCKER_HUB_TOKEN: $(DOCKER_HUB_TOKEN)
-#  - script: |
-#      docker tag buildtools2019:latest panisset/buildtools2019:latest
-#      docker push panisset/buildtools2019
-#    displayName: Docker Push
   - task: Docker@2
     inputs:
       command: build
