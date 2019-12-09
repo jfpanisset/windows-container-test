@@ -28,7 +28,7 @@ if [[ $# -ne 8 ]]; then
     exit 1
 fi
 
-# Make sure the azure-devops extension to the "az" Azure CLI is installed
+# Make sure the azure-devops extension to the "az" Azure CLI is installed. Should test for minimum required version (0.16.0)
 
 if ! az extension show --name azure-devops > /dev/null; then
     echo "adding Azure DevOps extension to Azure CLI"
@@ -37,7 +37,7 @@ else
     echo "azure-devops extension is already installed"
 fi
 
-# AZURE_DEVLOPS_EXT_PAT and AZURE_DEVOPS_EXT_GITHUB_PAT are special environment variables recognized by the az CLI
+# AZURE_DEVOPS_EXT_PAT and AZURE_DEVOPS_EXT_GITHUB_PAT are special environment variables recognized by the az CLI
 
 export AZURE_DEVOPS_ORG_NAME=$1
 export AZURE_DEVOPS_EXT_PAT=$2
@@ -56,7 +56,7 @@ az devops configure --defaults project=$GITHUB_PROJECT
 # Create the service connection to GitHub
 az devops service-endpoint github create --github-url https://github.com/$GITHUB_USER/$GITHUB_PROJECT/settings --name $GITHUB_PROJECT.github.connection
 
-# We need the object ID for the GitHub connection
+# Need the object ID for the GitHub service connection
 export GITHUB_CONNECTION_ID=$(az devops service-endpoint list  --query "[?name=='"$GITHUB_PROJECT".github.connection'].id" -o tsv)
 
 # Create the build pipeline
@@ -71,10 +71,8 @@ sed -e 's/DOCKER_HUB_USER/'$DOCKER_HUB_USER'/' \
     docker_hub_endpoint.json | \
 az devops service-endpoint create --service-endpoint-configuration /dev/stdin
 
-# Workaround for current lack of API for setting the "Allow all pipelines to use this service connection" property.
-export DOCKER_HUB_CONNECTION_ID=$(az devops service-endpoint list --query "[?name=='"$GITHUB_PROJECT".dockerhub.connection'].id" -o tsv)
-sed -e 's/DOCKER_HUB_CONNECTION_ID/'$DOCKER_HUB_CONNECTION_ID'/' \
-    -e 's/DOCKER_HUB_CONNECTION/name-of-docker-hub-service-endpoint/' \
-    docker_hub_endpoint_auth.json | \
-az devops invoke --http-method patch --area build --resource authorizedresources \
-    --route-parameters project=$GITHUB_PROJECT --api-version 5.0-preview --in-file /dev/stdin --encoding ascii
+# Need the object ID for the Docker Hub service connection
+export DOCKER_CONNECTION_ID=$(az devops service-endpoint list  --query "[?name=='"$GITHUB_PROJECT".dockerhub.connection'].id" -o tsv)
+
+# Set the "Allow all pipelines to use this service connection" property for the Docker Hub service connection
+az devops service-endpoint update --id $DOCKER_CONNECTION_ID --enable-for-all
