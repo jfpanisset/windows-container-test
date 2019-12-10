@@ -33,7 +33,7 @@ az devops configure --defaults project=AZDEVOPS_PROJECT_NAME
 You can update an existing installation of the `azure-devops` extension:
 
 ```bash
-az extension  update --name azure-devops
+az extension update --name azure-devops
 ```
 
 and list installed extensions and their versions:
@@ -44,7 +44,7 @@ $ az extension list
   {
     "extensionType": "whl",
     "name": "azure-devops",
-    "version": "0.15.0"
+    "version": "0.16.0"
   }
 ]
 ```
@@ -55,7 +55,7 @@ To specifically get the installed version of the `azure-devops` extension:
 $ az extension list --query "[?name=='azure-devops'].{version:version}"
 [
   {
-    "version": "0.15.0"
+    "version": "0.16.0"
   }
 ]
 ```
@@ -100,6 +100,15 @@ az devops service-endpoint create --service-endpoint-configuration /dev/stdin
 
 where `name-for-service-endpoint` corresponds to the `containerRegistry` property of the `Docker@2` task in your [azure-pipelines.yml](azure-pipelines.yml) CI configuration file. `az devops ...` reads the output of `sed` via `/dev/stdin` to avoid having to create a temporary file containing cleartext credentials.
 
+As of version 0.16.0 of the `azure-devops` extension to the Azure CLI, `az devops service-endpoint` supports a `update` command that can be used to allow access to the Docker Hub service connection from all pipelines in the the Azure DevOps project we just created (the previous approach based on using `az devops invoke` to issue the `http patch` API is kept below for reference):
+
+```bash
+export DOCKER_HUB_CONNECTION_ID=$(az devops service-endpoint list \
+    --query "[?name=='name-of-docker-hub-connection'].id" -o tsv)
+az devops service-endpoint update --id $DOCKER_CONNECTION_ID --enable-for-all
+```
+
+<strike>
 Currently `az devops service-endpoint create` creates a service connection which doesn't have the "Allow all pipelines to use this service connection" property set (which you can set when you create a service connection from the web UI). The comments in this [GitHub Issue requesting a feature enhancement](https://github.com/Azure/azure-devops-cli-extension/issues/817) propose the use of a generic API, `az devops invoke ...` as a workaround.
 
 ```bash
@@ -111,5 +120,6 @@ sed -e 's/DOCKER_HUB_CONNECTION_ID/'$DOCKER_HUB_CONNECTION_ID'/' \
 az devops invoke --http-method patch --area build --resource authorizedresources \
     --route-parameters project=GITHUB_PROJECT --api-version 5.0-preview --in-file /dev/stdin --encoding ascii
 ```
+</strike>
 
 
