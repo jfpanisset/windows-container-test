@@ -14,7 +14,7 @@ jobs:
     container: 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
 
       - name: Login to DockerHub
         uses: docker/login-action@v2
@@ -24,7 +24,7 @@ jobs:
 
       - name: Build and Push
         run: |
-          docker build --file=taskapp/taskapp/Dockerfile -t panisset/aswf-docker-win:latest .
+          docker build -t panisset/aswf-docker-win:latest .
           docker push panisset/aswf-docker-win:latest
 
 
