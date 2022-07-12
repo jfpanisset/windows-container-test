@@ -44,7 +44,7 @@ RUN Start-Process C:\TEMP\vs_buildtools.exe -Wait -ArgumentList `
     --includeRecommended
 
 # Install CMake
-ADD https://github.com/Kitware/CMake/releases/download/v3.23.2/cmake-3.23.2-win64-x64.msi C:\TEMP\cmake.msi
+ADD https://github.com/Kitware/CMake/releases/download/v3.23.2/cmake-3.23.2-windows-x86_64.msi C:\TEMP\cmake.msi
 RUN Start-Process msiexec.exe -Wait -ArgumentList '/I C:\TEMP\cmake.msi /quiet' ;  `
     [Environment]::SetEnvironmentVariable('Path', $env:Path + ';C:\Program Files\CMake\bin', 'Machine') ; `
     Remove-Item -Path 'C:\TEMP\cmake.msi'
