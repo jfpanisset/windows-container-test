@@ -10,7 +10,7 @@
 # This may or may not be true, it seems the building on top of just the Server Core 1803 base image
 # may be sufficient. 
 #ARG FROM_IMAGE=mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-1803
-ARG FROM_IMAGE=mcr.microsoft.com/windows/servercore:1803
+ARG FROM_IMAGE=mcr.microsoft.com/windows/servercore:ltsc2022-amd64
 FROM ${FROM_IMAGE}
 
 # We're using PowerShell as the default shell
@@ -23,11 +23,11 @@ SHELL ["powershell", "-Command"]
 #ADD https://aka.ms/vscollect.exe C:/TEMP/collect.exe
 
 # Use the latest release channel. For more control, specify the location of an internal layout.
-ARG CHANNEL_URL=https://aka.ms/vs/16/release/channel
+ARG CHANNEL_URL=https://aka.ms/vs/17/release/channel
 ADD ${CHANNEL_URL} C:/TEMP/VisualStudio.chman
 
 # Download and install Build Tools excluding workloads and components with known issues.
-ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
+ADD https://aka.ms/vs/17/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 # Prefix with C:\TEMP\Install.cmd to enable log gathering
 # Note that --wait option to installer doesn't actually wait, so you want to tell powershell
 # to explicitly wait for install to complete
@@ -44,13 +44,13 @@ RUN Start-Process C:\TEMP\vs_buildtools.exe -Wait -ArgumentList `
     --includeRecommended
 
 # Install CMake
-ADD https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-win64-x64.msi C:\TEMP\cmake.msi
+ADD https://github.com/Kitware/CMake/releases/download/v3.23.2/cmake-3.23.2-win64-x64.msi C:\TEMP\cmake.msi
 RUN Start-Process msiexec.exe -Wait -ArgumentList '/I C:\TEMP\cmake.msi /quiet' ;  `
     [Environment]::SetEnvironmentVariable('Path', $env:Path + ';C:\Program Files\CMake\bin', 'Machine') ; `
     Remove-Item -Path 'C:\TEMP\cmake.msi'
 
 # Install git
-ADD https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/Git-2.23.0-64-bit.exe C:\TEMP\git.exe
+ADD https://github.com/git-for-windows/git/releases/download/v2.37.0.windows.1/Git-2.37.0-64-bit.exe C:\TEMP\git.exe
 RUN Start-Process C:\TEMP\git.exe -Wait -ArgumentList `
     '/VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"' ;`
     Remove-Item -Path 'C:\TEMP\git.exe'

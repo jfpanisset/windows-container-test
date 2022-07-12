@@ -1,83 +1,25 @@
 # windows-container-test
 
-This project demonstrates building a Windows Docker container with Visual Studio, CMake and git, with the objective of being to implement the VFX Reference Platform compliant ASWF build containers from https://github.com/AcademySoftwareFoundation/aswf-docker
+This project demonstrates building a Windows Docker container with Visual Studio, CMake and git, with the objective of being to implement the VFX Reference Platform compliant ASWF build containers from [Docker Images for the Academy Software Foundation](https://github.com/AcademySoftwareFoundation/aswf-docker).
 
 ## Windows Version Requirements
 
-Docker on Windows requires that containers are built from a base images of the same Windows version (or more specifically Build version) than the system on which they will run. As of Fall 2019 the only Microsoft hosted Azure Pipelines Windows build agent with Container support enabled is running Windows Server Core 2016 Build 1803:
+Docker on Windows requires that containers are built from a base images of the same Windows version (or more specifically Build version) than the system on which they will run. As of Summer 2022 the GitHub hosted GitHub Actions Windows runners with Container support enabled are running:
 
-https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/win/WindowsContainer1803-Readme.md
+* [Windows Server 2019 Datacenter 10.0.17763 Build 3046](https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md)
+* [Windows Server 2022 Datacenter 10.0.20348 Build 768](https://github.com/actions/virtual-environments/blob/main/images/win/Windows2022-Readme.md)
 
-These build agents already cache some base images, so to save disk space (both when generating the container and when ultimately using it on the same type of build agent) we will use the following base image:
+Both of these include Docker 20.10.7. We use the 2022 base image for Windows Server Core:
 
 ```
-mcr.microsoft.com/windows/servercore:1803
+mcr.microsoft.com/windows/servercore:ltsc2022-amd64
 ```
 
-Windows versions 1909 and newer lift this restriction and allow Windows hosts to run containters built on older Windows versions:
-
-https://docs.microsoft.com/en-us/windows-insider/at-home/whats-new-wip-at-home-1909
-
-## Setting Up Azure Pipelines
-
-For a more detailed discussion on setting up an Azure DevOps / Azure Pipelines CI environment see [Continuous Integration with Azure DevOps in the ASWF Sample Project](https://github.com/jfpanisset/aswf-sample-project#continuous-integration-with-azure-devops--azure-pipeline). We will use the Azure CLI to create a corresponding Azure DevOps project:
-
-```bash
-az extension add --name azure-devops
-export AZURE_DEVOPS_EXT_PAT=YOUR_AZDEVOPS_PAT
-az devops configure --defaults organization=https://dev.azure.com/AZDEVOPS_ORG_NAME
-az devops project create --name AZDEVOPS_PROJECT_NAME --source-control git --visibility public
-az devops configure --defaults project=AZDEVOPS_PROJECT_NAME
-```
-
-You can update an existing installation of the `azure-devops` extension:
-
-```bash
-az extension update --name azure-devops
-```
-
-and list installed extensions and their versions:
-
-```bash
-$ az extension list
-[
-  {
-    "extensionType": "whl",
-    "name": "azure-devops",
-    "version": "0.16.0"
-  }
-]
-```
-
-To specifically get the installed version of the `azure-devops` extension:
-
-```bash
-$ az extension list --query "[?name=='azure-devops'].{version:version}"
-[
-  {
-    "version": "0.16.0"
-  }
-]
-```
-
-Create the service connection to the GitHub project:
-
-```bash
-export AZURE_DEVOPS_EXT_GITHUB_PAT=YOUR_GITHUB_PAT
-az devops service-endpoint github create --github-url https://github.com/GITHUB_ACCOUNT/GITHUB_PROJECT/settings --name GITHUB_PROJECT.github.connection
-```
-
-Create the build pipeline:
-
-```bash
-export GITHUB_CONNECTION_ID=$(az devops service-endpoint list  --query "[?name=='GITHUB_PROJECT.github.connection'].id" -o tsv)
-az pipelines create --name GITHUB_PROJECT.ci --repository GITHUB_USER/GITHUB_PROJECT --branch master --repository-type github --service-connection $GITHUB_CONNECTION_ID --skip-first-run --yml-path /a
-zure-pipelines.yml
-```
+Newer Windows version support running older containers using [Hyper-V Isolation](https://docs.microsoft.com/en-us/virtualization/windowscontainers/deploy-containers/version-compatibility?tabs=windows-server-2022%2Cwindows-11-21H2#hyper-v-isolation-for-containers) which turns the container into something more like a Hyper-V VM. It's unclear if that's supported on GitHub Actions Windows runners.
 
 ### Using a secret variable for docker hub login
 
-To authenticate against Docker Hub using `docker login` to push the newly built image requires a [Docker Hub Personnal Access Token](https://www.docker.com/blog/docker-hub-new-personal-access-tokens/). Record this PAT in a secure location before dismissing the creation window.
+To authenticate against Docker Hub using `docker login` to push the newly built image requires a [Docker Hub Personal Access Token](https://www.docker.com/blog/docker-hub-new-personal-access-tokens/). Record this PAT in a secure location before dismissing the creation window.
 
 Next save this token to a secret Azure Pipelines secret variable called `DOCKER_HUB_TOKEN`:
 
