@@ -66,5 +66,5 @@ RUN Start-Process C:\TEMP\git.exe -Wait -ArgumentList `
 #           foreach-object { $name, $value = $_ -split '=', 2 ; set-content env:\"$name\" $value } ;
 
 # Default to PowerShell if no other command specified.
-#CMD powershell.exe -NoLogo -ExecutionPolicy Bypass
+CMD powershell.exe -NoLogo -ExecutionPolicy Bypass
 
